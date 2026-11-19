@@ -6,7 +6,19 @@ import React from 'react'
 import type { ReactFormState } from 'react-dom/client'
 import { renderToReadableStream } from 'react-dom/server.edge'
 import { injectRSCPayload } from 'rsc-html-stream/server'
+import { WorkerEntrypoint } from 'cloudflare:workers'
 import type { RscPayload } from './entry.rsc'
+
+// Cloudflare Workers entry for the SSR Worker (see `wrangler.ssr.jsonc`).
+// The main Worker calls `renderHTML` through the `SSR` service binding (RPC).
+export default class SsrWorker extends WorkerEntrypoint {
+  renderHTML(
+    rscStream: ReadableStream<Uint8Array>,
+    options: Parameters<typeof renderHTML>[1],
+  ) {
+    return renderHTML(rscStream, options)
+  }
+}
 
 export async function renderHTML(
   rscStream: ReadableStream<Uint8Array>,

@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "react-vite-rsc",
+  // Worker entry: the `rsc` environment's default export (`{ fetch }`).
+  // It renders RSC, delegates HTML rendering to the SSR Worker and handles server actions.
+  "main": "./src/framework/entry.rsc.tsx",
+  "compatibility_date": "2026-11-01",
+  "observability": {
+    "enabled": true,
+  },
+  // SSR Worker (`wrangler.ssr.jsonc`). Must match its `name`.
+  "services": [
+    {
+      "binding": "SSR",
+      "service": "react-vite-rsc-ssr",
+    },
+  ],
+  // Static assets (client bundle and `public/`) are served by Workers Static Assets.
+  // The Cloudflare Vite plugin writes the production asset directory during `vite build`.
+  "assets": {
+    "directory": "./dist/client",
+    "not_found_handling": "none",
+  },
+}

@@ -23,11 +23,19 @@ export type RscPayload = {
   formState?: ReactFormState
 }
 
-// The plugin assumes by default that the `rsc` entry has a default export of a request handler.
-// However, server entries can be executed differently by registering your own server handler.
+// Cloudflare Workers bindings available to this Worker.
+// `SSR` is the service binding to the SSR Worker (`wrangler.ssr.jsonc`).
+type Env = {
+  SSR: {
+    renderHTML: typeof import('./entry.ssr.tsx').renderHTML
+  }
+}
+
+// The plugin's built-in request handler is disabled (`serverHandler: false` in vite.config.ts),
+// so this Worker's `fetch` handler is the entry point on Cloudflare Workers.
 export default { fetch: handler }
 
-async function handler(request: Request): Promise<Response> {
+async function handler(request: Request, env: Env): Promise<Response> {
   // differentiate RSC, SSR, action, etc.
   const renderRequest = parseRenderRequest(request)
   request = renderRequest.request
@@ -96,13 +104,9 @@ async function handler(request: Request): Promise<Response> {
   }
 
   // Delegate to SSR environment for html rendering.
-  // The plugin provides `loadModule` helper to allow loading SSR environment entry module
-  // in RSC environment. however this can be customized by implementing own runtime communication
-  // e.g. `@cloudflare/vite-plugin`'s service binding.
-  const ssrEntryModule = await import.meta.viteRsc.loadModule<
-    typeof import('./entry.ssr.tsx')
-  >('ssr', 'index')
-  const ssrResult = await ssrEntryModule.renderHTML(rscStream, {
+  // On Cloudflare Workers, the SSR environment runs as a separate Worker and is reached
+  // through the `SSR` service binding (instead of `import.meta.viteRsc.loadModule`).
+  const ssrResult = await env.SSR.renderHTML(rscStream, {
     formState,
     // allow quick simulation of javascript disabled browser
     debugNojs: renderRequest.url.searchParams.has('__nojs'),

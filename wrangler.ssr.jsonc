@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "react-vite-rsc-ssr",
+  // SSR Worker: renders the RSC stream into HTML.
+  // Called from the main Worker (`wrangler.jsonc`) via the `SSR` service binding.
+  "main": "./src/framework/entry.ssr.tsx",
+  "compatibility_date": "2026-11-01",
+}

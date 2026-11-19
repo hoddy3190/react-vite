@@ -1,17 +1,30 @@
+import { cloudflare } from '@cloudflare/vite-plugin'
 import react from '@vitejs/plugin-react'
 import rsc from '@vitejs/plugin-rsc'
 import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [
+    // Runs the `rsc` environment inside workerd (Cloudflare Workers runtime).
+    // `ssr` runs as an auxiliary Worker (`wrangler.ssr.jsonc`) and is called from
+    // the `rsc` Worker through the `SSR` service binding (see `wrangler.jsonc`).
+    cloudflare({
+      viteEnvironment: { name: 'rsc' },
+      auxiliaryWorkers: [
+        {
+          configPath: './wrangler.ssr.jsonc',
+          viteEnvironment: { name: 'ssr' },
+        },
+      ],
+    }),
+
     rsc({
       // `entries` option is only a shorthand for specifying each `rollupOptions.input` below
       // > entries: { rsc, ssr, client },
       //
-      // By default, the plugin sets up a request handler based on the default export of
-      // the `rsc` environment's `rollupOptions.input.index`.
-      // This can be disabled when setting up your own server handler, e.g. `@cloudflare/vite-plugin`.
-      // > serverHandler: false
+      // The Cloudflare plugin provides the Worker `fetch` handler (from wrangler `main`),
+      // so the plugin's built-in request handler is disabled.
+      serverHandler: false,
     }),
 
     // use any of react plugins https://github.com/vitejs/vite-plugin-react

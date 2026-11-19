@@ -35,6 +35,36 @@ See [`@vitejs/plugin-rsc`](https://github.com/vitejs/vite-plugin-react/tree/main
 - [`./src/framework/entry.{browser,rsc,ssr}.tsx`](./src/framework) (with inline comments) provides an overview of how low level RSC (React flight) API can be used to build RSC framework.
 - You can use [`vite-plugin-inspect`](https://github.com/antfu-collective/vite-plugin-inspect) to understand how `"use client"` and `"use server"` directives are transformed internally.
 
-## Deployment
+## Cloudflare Workers
 
-See [vite-plugin-rsc-deploy-example](https://github.com/hi-ogawa/vite-plugin-rsc-deploy-example)
+The app runs on [Cloudflare Workers](https://developers.cloudflare.com/workers/) via [`@cloudflare/vite-plugin`](https://developers.cloudflare.com/workers/vite-plugin/).
+
+The app is split into two Workers:
+
+- `rsc` Worker ([`wrangler.jsonc`](./wrangler.jsonc), entry [`./src/framework/entry.rsc.tsx`](./src/framework/entry.rsc.tsx)): renders RSC, handles server actions and serves static assets (`dist/client`).
+- `ssr` Worker ([`wrangler.ssr.jsonc`](./wrangler.ssr.jsonc), entry [`./src/framework/entry.ssr.tsx`](./src/framework/entry.ssr.tsx)): renders HTML. It is called from the `rsc` Worker through the `SSR` service binding.
+
+```sh
+# run dev server (in workerd)
+npm run dev
+
+# build and preview in workerd
+npm run build
+npm run preview
+
+# type check
+npm run typecheck
+
+# regenerate worker-configuration.d.ts after changing wrangler config
+npm run cf-typegen
+
+# deploy (ssr Worker first, since rsc Worker binds to it)
+npx wrangler login   # once
+npm run deploy
+```
+
+Notes:
+
+- Worker names are `react-vite-rsc` and `react-vite-rsc-ssr`. Change `name` in both wrangler configs (and the `service` in `wrangler.jsonc`) if you want different names.
+- The in-memory server counter in [`./src/action.tsx`](./src/action.tsx) is per isolate, so it is not shared across Workers instances.
+- Local secrets go in `.dev.vars` (git-ignored).
