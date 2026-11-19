@@ -2,7 +2,9 @@ import './index.css' // css import is automatically injected in exported server 
 import viteLogo from '/vite.svg'
 import { getServerCounter, updateServerCounter } from './action.tsx'
 import reactLogo from './assets/react.svg'
+import { ClientApiCard } from './client-api.tsx'
 import { ClientCounter } from './client.tsx'
+import { ServerApiCard } from './server-api.tsx'
 
 export function Root(props: { url: URL }) {
   return (
@@ -44,6 +46,12 @@ function App(props: { url: URL }) {
         </form>
       </div>
       <div className="card">Request URL: {props.url?.href}</div>
+      <div className="card">
+        <ServerApiCard origin={props.url.origin} />
+      </div>
+      <div className="card">
+        <ClientApiCard />
+      </div>
       <ul className="read-the-docs">
         <li>
           Edit <code>src/client.tsx</code> to test client HMR.

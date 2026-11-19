@@ -7,6 +7,7 @@ import {
   decodeFormState,
 } from '@vitejs/plugin-rsc/rsc/server'
 import type { ReactFormState } from 'react-dom/client'
+import { handleApi } from '../api.ts'
 import { Root } from '../root.tsx'
 import { parseRenderRequest } from './request.tsx'
 
@@ -36,6 +37,10 @@ type Env = {
 export default { fetch: handler }
 
 async function handler(request: Request, env: Env): Promise<Response> {
+  // plain API routes (e.g. `/api/server-info`) bypass RSC / SSR rendering
+  const apiResponse = handleApi(request)
+  if (apiResponse) return apiResponse
+
   // differentiate RSC, SSR, action, etc.
   const renderRequest = parseRenderRequest(request)
   request = renderRequest.request
